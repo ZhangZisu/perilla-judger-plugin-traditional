@@ -100,6 +100,7 @@ export interface IRunCaseResult {
 }
 
 export interface ISubtaskResult {
+    name: string;
     status: SolutionResult;
     score: number;
     runcases: IRunCaseResult[];

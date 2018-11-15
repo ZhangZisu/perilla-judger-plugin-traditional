@@ -3,21 +3,17 @@ import { join } from "path";
 import { Static } from "runtypes";
 import { SandboxResult, SandboxStatus } from "simple-sandbox/lib/interfaces";
 import { compile } from "./compile";
+import { tmpDir } from "./constants";
 import { IRunCaseResult, ISolution, ISubtaskResult, JudgeFunction, Problem, Solution, SolutionResult, Subtask } from "./interface";
 import { run } from "./run";
 import { convertStatus, shortRead } from "./utils";
-
-export const chroot = join(__dirname, "..", "RootFS");
-export const cgroup = "PERILLA";
-export const environments = ["PATH=/usr/lib/jvm/java-1.8-openjdk/bin:/usr/share/Modules/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"];
-
-export const tmpDir = "/tmp/perilla/judger/plugin/traditional";
-ensureDirSync(tmpDir);
 
 const mainDir = join(tmpDir, "main");
 ensureDirSync(mainDir);
 
 type IWrappedRun = (stdin: string, extraFiles: Array<{ src: string, dst: string }>, timeLimit: number, memoryLimit: number) => Promise<{ stdout: string, result: SandboxResult }>;
+
+const MAX_SPJ_OUTPUT_SIZE = 256;
 
 const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
     if (Problem.guard(problem)) {
@@ -25,9 +21,11 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
             emptyDirSync(mainDir);
             let runSolution: IWrappedRun = null;
             let runJudger: IWrappedRun = null;
+            let solutionFile: string = null;
             // Compile solution
             try {
                 const solutionSource = await resolveFile(solution.file);
+                solutionFile = solutionSource.path;
                 const solutionExecTmpFile = await compile(solutionSource.path, solution.language);
                 const solutionExecFile = join(mainDir, "solution");
                 copyFileSync(solutionExecTmpFile, solutionExecFile);
@@ -66,9 +64,11 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                 const degree = new Map<string, number>();
                 const queue = [];
                 const order = [];
+                let sum = 0;
                 // Topsort
                 for (const subtask of problem.subtasks) {
                     subtasks.set(subtask.name, subtask);
+                    sum += subtask.score;
                     for (const dep of subtask.dependency) {
                         if (!degree.has(dep)) {
                             degree.set(dep, 1);
@@ -77,9 +77,13 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                         }
                     }
                 }
-                for (const subtask in subtasks) {
-                    if (!degree.has(subtask) || !degree.get(subtask)) {
-                        queue.push(subtask);
+                if (sum !== 100) {
+                    // Bad config
+                    return await cb({ status: SolutionResult.JudgementFailed, score: 0, details: { error: "Sum of subtask scores is not 100!" } });
+                }
+                for (const [name] of subtasks) {
+                    if (!degree.has(name) || !degree.get(name)) {
+                        queue.push(name);
                     }
                 }
                 while (queue.length) {
@@ -119,80 +123,85 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                             break;
                         }
                     }
-                    if (skip) {
-                        results.set(name, {
-                            status: SolutionResult.Skipped,
-                            score: 0,
-                            runcases: [],
-                            time: 0,
-                            memory: 0,
-                        });
-                        continue;
-                    }
                     const result: ISubtaskResult = {
+                        name,
                         status: SolutionResult.WaitingJudge,
                         score: 100,
                         runcases: [],
                         time: 0,
                         memory: 0,
                     };
-                    const append = (runresult: IRunCaseResult) => {
-                        result.status = result.status || runresult.status;
-                        result.score = Math.min(result.score, runresult.score);
-                        result.runcases.push(runresult);
-                        result.time = Math.max(result.time, runresult.time);
-                        result.memory = Math.max(result.memory, runresult.memory);
-                    };
-                    for (const runcase of subtask.runcases) {
-                        if (result.score === 0) { break; }
-                        const input = await resolveFile(runcase.input);
-                        const output = await resolveFile(runcase.output);
-                        const userrun = await runSolution(input.path, [], subtask.timeLimit, subtask.memoryLimit);
-                        const caseResult = {
-                            status: SolutionResult.WaitingJudge,
-                            score: 0,
-                            input: shortRead(input.path),
-                            output: "",
-                            answer: shortRead(output.path),
-                            time: userrun.result.time,
-                            memory: userrun.result.memory,
-                            log: "",
-                        };
-                        if (userrun.result.code !== 0 || userrun.result.status !== SandboxStatus.OK) {
-                            caseResult.status = convertStatus(userrun.result.status);
-                        } else {
-                            const userout = join(mainDir, "userout");
-                            copyFileSync(userrun.stdout, userout);
-                            caseResult.output = shortRead(userout);
-                            const judgerrun = await runJudger(userout, [
-                                { src: input.path, dst: "input" },
-                                { src: output.path, dst: "output" },
-                            ], subtask.timeLimit, subtask.memoryLimit);
-                            if (judgerrun.result.code !== 0 || judgerrun.result.status !== SandboxStatus.OK) {
-                                caseResult.status = SolutionResult.JudgementFailed;
+                    if (skip) {
+                        result.status = SolutionResult.Skipped;
+                        result.score = 0;
+                    } else {
+                        for (const runcase of subtask.runcases) {
+                            if (result.score === 0) { break; }
+                            const input = await resolveFile(runcase.input);
+                            const output = await resolveFile(runcase.output);
+                            const userrun = await runSolution(input.path, [], subtask.timeLimit, subtask.memoryLimit);
+                            const caseResult = {
+                                status: SolutionResult.WaitingJudge,
+                                score: 0,
+                                input: shortRead(input.path),
+                                output: "",
+                                answer: shortRead(output.path),
+                                time: userrun.result.time,
+                                memory: userrun.result.memory,
+                                log: "",
+                            };
+                            if (userrun.result.code !== 0 || userrun.result.status !== SandboxStatus.OK) {
+                                caseResult.status = convertStatus(userrun.result.status);
                             } else {
-                                const fd = openSync(judgerrun.stdout, "r");
-                                const buf = Buffer.allocUnsafe(16);
-                                readSync(fd, buf, 0, 16, 0);
-                                const tokens = buf.toString().split(" ");
-                                if (tokens.length !== 2) {
-                                    throw new Error("Invalid spj");
+                                const userout = join(mainDir, "userout");
+                                copyFileSync(userrun.stdout, userout);
+                                caseResult.output = shortRead(userout);
+                                const judgerrun = await runJudger(userout, [
+                                    { src: input.path, dst: "input" },
+                                    { src: output.path, dst: "output" },
+                                    { src: solutionFile, dst: "usercode" },
+                                ], subtask.timeLimit, subtask.memoryLimit);
+                                if (judgerrun.result.code !== 0 || judgerrun.result.status !== SandboxStatus.OK) {
+                                    caseResult.status = SolutionResult.JudgementFailed;
+                                } else {
+                                    const fd = openSync(judgerrun.stdout, "r");
+                                    const buf = Buffer.alloc(MAX_SPJ_OUTPUT_SIZE);
+                                    readSync(fd, buf, 0, MAX_SPJ_OUTPUT_SIZE, 0);
+                                    const tokens = buf.toString().split("\n");
+                                    if (tokens.length < 2) {
+                                        throw new Error("Invalid spj");
+                                    }
+                                    const status = parseInt(tokens[0], 10);
+                                    if (!SolutionResult[status]) {
+                                        throw new Error("Invalid spj");
+                                    }
+                                    const score = parseInt(tokens[1], 10);
+                                    if (score < 0 || score > 100) {
+                                        throw new Error("Invalid spj");
+                                    }
+                                    caseResult.log = tokens[2] || "SPJ didn't provide any message";
+                                    caseResult.status = status;
+                                    caseResult.score = score;
+                                    closeSync(fd);
                                 }
-                                const status = parseInt(tokens[0], 10);
-                                if (!SolutionResult[status]) {
-                                    throw new Error("Invalid spj");
-                                }
-                                const score = parseInt(tokens[1], 10);
-                                if (score < 0 || score > 100) {
-                                    throw new Error("Invalid spj");
-                                }
-                                caseResult.status = status;
-                                caseResult.score = score;
-                                closeSync(fd);
                             }
+                            if (result.status === SolutionResult.WaitingJudge || result.status === SolutionResult.Accepted) {
+                                result.status = caseResult.status;
+                            }
+                            result.score = Math.min(result.score, caseResult.score);
+                            result.runcases.push(caseResult);
+                            result.time = Math.max(result.time, caseResult.time);
+                            result.memory = Math.max(result.memory, caseResult.memory);
                         }
-                        append(caseResult);
                     }
+                    if (judgeResult.status === SolutionResult.WaitingJudge || judgeResult.status === SolutionResult.Accepted) {
+                        judgeResult.status = result.status;
+                    }
+                    judgeResult.score += result.score / 100 * subtask.score;
+                    judgeResult.details.subtasks.push(result);
+                    judgeResult.details.time = Math.max(judgeResult.details.time, result.time);
+                    judgeResult.details.memory = Math.max(judgeResult.details.memory, result.memory);
+                    results.set(result.name, result);
                     await cb(judgeResult);
                 }
                 return await cb(judgeResult);
@@ -207,4 +216,4 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
     }
 };
 
-export default main;
+module.exports = main;

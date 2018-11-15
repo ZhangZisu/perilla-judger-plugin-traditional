@@ -1,6 +1,8 @@
 const judge = require("../dist");
 const { join } = require("path");
 
+console.log("Start test...");
+
 judge(
     {
         subtasks: [
@@ -19,7 +21,7 @@ judge(
         language: "cpp11"
     },
     (id) => ({
-        path: join(__dirname, id),
+        path: join(__dirname, "" + id),
         info: {}
     }),
     (solution) => console.log(solution)

@@ -2,11 +2,11 @@ import { ILanguage } from "../interface";
 
 const cpp11: ILanguage = {
     compile: {
-        executable: "/bin/g++",
+        executable: "/usr/bin/g++",
         memoryLimit: 512 * 1024 * 1024,
-        timeLimit: 5 * 1000,
-        processLimit: 2,
-        parameters: ["main.cpp", "-o", "main", "-Wall", "-O2", "-std=c++11"],
+        timeLimit: 10000,
+        processLimit: -1,
+        parameters: ["/usr/bin/g++", "main.cpp", "-o", "main", "-Wall", "-O2", "-std=c++11"],
         sourceFileName: "main.cpp",
         distFileName: "main",
     },
@@ -18,4 +18,4 @@ const cpp11: ILanguage = {
     },
 };
 
-export default cpp11;
+module.exports = cpp11;

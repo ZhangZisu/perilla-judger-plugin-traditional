@@ -1,7 +1,7 @@
 import { copyFileSync, emptyDirSync, ensureDirSync } from "fs-extra";
 import { join } from "path";
 import { startSandbox } from "simple-sandbox";
-import { cgroup, chroot, environments, tmpDir } from ".";
+import { cgroup, chroot, environments, tmpDir } from "./constants";
 import { ILanguage } from "./interface";
 
 const runDir = join(tmpDir, "run");
