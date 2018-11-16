@@ -9,3 +9,4 @@ sudo mount -t sysfs sys RootFS/sys/
 sudo mount -o bind /dev RootFS/dev/
 sudo mount -o bind /dev RootFS/dev/pts
 cp /etc/resolv.conf RootFS/etc
+sudo chroot RootFS /bin/sh
