@@ -39,7 +39,7 @@ export const compile = async (file: string, lang: string) => {
         workingDirectory: "/root",
     });
     const compileResult = await compileProcess.waitForStop();
-    const compileOutput = `${shortRead(stdout)}\n${shortRead(stdout)}`;
+    const compileOutput = `${shortRead(stderr)}\n${shortRead(stdout)}`;
     const distFile = join(mount, language.compile.distFileName);
     if (compileResult.status === SandboxStatus.OK && existsSync(distFile)) {
         return distFile;

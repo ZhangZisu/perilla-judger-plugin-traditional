@@ -1,0 +1,10 @@
+#include <cstdio>
+
+int main()
+{
+    int a, b;
+    scanf("%d%d", &a, &b);
+    auto c = [](int a, int b) { return a + b; };
+    printf("%d\n", c(a, b));
+    return 0;
+}
