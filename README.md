@@ -5,7 +5,11 @@ Judge plugin for perilla tradition problems(spj supported)
 
 Exec `sh install.sh`
 
-When you see `/ #`, please install some packages like `gcc`, `nodejs`
+When you see `/ #`, please manually install some packages:
+ - `gcc`
+ - `nodejs`
+ - `python2`
+ - `python3`
 
 ## The fucking GFW blocked alpinelinux.org!
 ```shell
