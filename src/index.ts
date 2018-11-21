@@ -1,23 +1,29 @@
 import { closeSync, copyFileSync, emptyDirSync, ensureDirSync, openSync, readSync } from "fs-extra";
 import { join } from "path";
+import { PerillaSandbox } from "perilla-sandbox";
+import { IRunResult, RunStatus } from "perilla-sandbox/dist/interface";
 import { Static } from "runtypes";
-import { SandboxResult, SandboxStatus } from "simple-sandbox/lib/interfaces";
 import { compile } from "./compile";
 import { tmpDir } from "./constants";
-import { IRunCaseResult, ISolution, ISubtaskResult, JudgeFunction, Problem, Solution, SolutionResult, Subtask } from "./interface";
+import { ISolution, ISubtaskResult, JudgeFunction, Problem, Solution, SolutionResult, Subtask } from "./interface";
 import { run } from "./run";
 import { convertStatus, shortRead } from "./utils";
 
 const mainDir = join(tmpDir, "main");
 ensureDirSync(mainDir);
 
-type IWrappedRun = (stdin: string, extraFiles: Array<{ src: string, dst: string }>, timeLimit: number, memoryLimit: number) => Promise<{ stdout: string, result: SandboxResult }>;
+type IWrappedRun = (stdin: string, extraFiles: Array<{ src: string, dst: string }>, timeLimit: number, memoryLimit: number) => { stdout: string, result: IRunResult };
 
 const MAX_SPJ_OUTPUT_SIZE = 256;
+
+let sandbox: PerillaSandbox = null;
 
 const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
     if (Problem.guard(problem)) {
         if (Solution.guard(solution)) {
+            if (!sandbox) {
+                sandbox = new PerillaSandbox();
+            }
             emptyDirSync(mainDir);
             let runSolution: IWrappedRun = null;
             let runJudger: IWrappedRun = null;
@@ -26,11 +32,11 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
             try {
                 const solutionSource = await resolveFile(solution.file);
                 solutionFile = solutionSource.path;
-                const solutionExecTmpFile = await compile(solutionSource.path, solution.language);
+                const solutionExecTmpFile = compile(sandbox, solutionSource.path, solution.language);
                 const solutionExecFile = join(mainDir, "solution");
                 copyFileSync(solutionExecTmpFile, solutionExecFile);
-                runSolution = async (stdin, extraFiles, timeLimit, memoryLimit) => {
-                    return run(solutionExecFile, solution.language, stdin, extraFiles, timeLimit, memoryLimit);
+                runSolution = (stdin, extraFiles, timeLimit, memoryLimit) => {
+                    return run(sandbox, solutionExecFile, solution.language, stdin, extraFiles, timeLimit, memoryLimit);
                 };
             } catch (e) {
                 // Compile Error
@@ -40,18 +46,18 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
             try {
                 if (problem.spj) {
                     const judgerSource = await resolveFile(problem.spj.file);
-                    const judgerExecTmpFile = await compile(judgerSource.path, problem.spj.language);
+                    const judgerExecTmpFile = compile(sandbox, judgerSource.path, problem.spj.language);
                     const judgerExecFile = join(mainDir, "judger");
                     copyFileSync(judgerExecTmpFile, judgerExecFile);
-                    runJudger = async (stdin, extraFiles, timeLimit, memoryLimit) => {
-                        return run(judgerExecFile, problem.spj.language, stdin, extraFiles, timeLimit, memoryLimit);
+                    runJudger = (stdin, extraFiles, timeLimit, memoryLimit) => {
+                        return run(sandbox, judgerExecFile, problem.spj.language, stdin, extraFiles, timeLimit, memoryLimit);
                     };
                 } else {
-                    const judgerExecTmpFile = await compile(join(__dirname, "..", "resources", "compare.cpp"), "cpp11");
+                    const judgerExecTmpFile = await compile(sandbox, join(__dirname, "..", "resources", "compare.cpp"), "cpp11");
                     const judgerExecFile = join(mainDir, "judger");
                     copyFileSync(judgerExecTmpFile, judgerExecFile);
-                    runJudger = async (stdin, extraFiles, timeLimit, memoryLimit) => {
-                        return run(judgerExecFile, "cpp11", stdin, extraFiles, timeLimit, memoryLimit);
+                    runJudger = (stdin, extraFiles, timeLimit, memoryLimit) => {
+                        return run(sandbox, judgerExecFile, "cpp11", stdin, extraFiles, timeLimit, memoryLimit);
                     };
                 }
             } catch (e) {
@@ -139,7 +145,7 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                             if (result.score === 0) { break; }
                             const input = await resolveFile(runcase.input);
                             const output = await resolveFile(runcase.output);
-                            const userrun = await runSolution(input.path, [], subtask.timeLimit, subtask.memoryLimit);
+                            const userrun = runSolution(input.path, [], subtask.timeLimit, subtask.memoryLimit);
                             const caseResult = {
                                 status: SolutionResult.WaitingJudge,
                                 score: 0,
@@ -150,18 +156,18 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                                 memory: userrun.result.memory,
                                 log: "",
                             };
-                            if (userrun.result.code !== 0 || userrun.result.status !== SandboxStatus.OK) {
+                            if (userrun.result.status !== RunStatus.Succeeded) {
                                 caseResult.status = convertStatus(userrun.result.status);
                             } else {
                                 const userout = join(mainDir, "userout");
                                 copyFileSync(userrun.stdout, userout);
                                 caseResult.output = shortRead(userout);
-                                const judgerrun = await runJudger(userout, [
+                                const judgerrun = runJudger(userout, [
                                     { src: input.path, dst: "input" },
                                     { src: output.path, dst: "output" },
                                     { src: solutionFile, dst: "usercode" },
                                 ], subtask.timeLimit, subtask.memoryLimit);
-                                if (judgerrun.result.code !== 0 || judgerrun.result.status !== SandboxStatus.OK) {
+                                if (userrun.result.status !== RunStatus.Succeeded) {
                                     caseResult.status = SolutionResult.JudgementFailed;
                                 } else {
                                     const fd = openSync(judgerrun.stdout, "r");

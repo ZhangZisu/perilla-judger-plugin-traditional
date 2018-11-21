@@ -28,7 +28,7 @@ enum SolutionResult
 };
 inline void callback(SolutionResult status, double score, const char *message)
 {
-    assert(score > 0 && score <= 100);
+    assert(score >= 0 && score <= 100);
     printf("%d\n%f\n", status, score);
     if (message)
         printf("%s\n", message);

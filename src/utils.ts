@@ -1,5 +1,5 @@
 import { closeSync, existsSync, fstatSync, openSync, readFileSync, readSync } from "fs-extra";
-import { SandboxStatus } from "simple-sandbox/lib/interfaces";
+import { RunStatus } from "perilla-sandbox/dist/interface";
 import { SolutionResult } from "./interface";
 
 export const shortRead = (file: string) => {
@@ -18,21 +18,17 @@ export const shortRead = (file: string) => {
     }
 };
 
-export const convertStatus = (origin: SandboxStatus) => {
+export const convertStatus = (origin: RunStatus) => {
     switch (origin) {
-        case SandboxStatus.Cancelled:
-            return SolutionResult.JudgementFailed;
-        case SandboxStatus.MemoryLimitExceeded:
+        case RunStatus.MemoryLimitExceeded:
             return SolutionResult.MemoryLimitExceeded;
-        case SandboxStatus.OK:
+        case RunStatus.Succeeded:
             return SolutionResult.Accepted;
-        case SandboxStatus.OutputLimitExceeded:
+        case RunStatus.RuntimeError:
             return SolutionResult.RuntimeError;
-        case SandboxStatus.RuntimeError:
-            return SolutionResult.RuntimeError;
-        case SandboxStatus.TimeLimitExceeded:
+        case RunStatus.TimeLimitExceeded:
             return SolutionResult.TimeLimitExceeded;
-        case SandboxStatus.Unknown:
+        case RunStatus.Failed:
             return SolutionResult.JudgementFailed;
     }
 };

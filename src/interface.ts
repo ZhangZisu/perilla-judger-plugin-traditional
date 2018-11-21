@@ -76,14 +76,14 @@ export interface ILanguage {
         memoryLimit: number;
         timeLimit: number;
         processLimit: number;
-        parameters: string[];
+        arguments: string[];
         sourceFileName: string;
         distFileName: string;
     };
     run: {
         executable: string;
         filename: string;
-        parameters: string[];
+        arguments: string[];
         processLimit: number;
     };
 }

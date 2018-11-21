@@ -10,7 +10,7 @@ const { join } = require("path");
                 {
                     name: "default",
                     timeLimit: 1000,
-                    memoryLimit: 512 * 1024 * 1024,
+                    memoryLimit: 512 * 1024,
                     score: 100,
                     runcases: [{ input: 1, output: 2 }],
                     dependency: []
@@ -36,7 +36,7 @@ const { join } = require("path");
                 {
                     name: "default",
                     timeLimit: 1000,
-                    memoryLimit: 512 * 1024 * 1024,
+                    memoryLimit: 512 * 1024,
                     score: 100,
                     runcases: [{ input: 1, output: 2 }],
                     dependency: []
@@ -62,7 +62,7 @@ const { join } = require("path");
                 {
                     name: "default",
                     timeLimit: 1000,
-                    memoryLimit: 512 * 1024 * 1024,
+                    memoryLimit: 1024 * 1024,
                     score: 100,
                     runcases: [{ input: 1, output: 2 }],
                     dependency: []
