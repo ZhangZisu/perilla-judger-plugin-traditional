@@ -6,7 +6,9 @@
   "author": "ZhangZisu <admin@zhangzisu.cn>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "pretest": "tsc",
+    "test": "node test"
   },
   "devDependencies": {
     "@types/fs-extra": "^5.0.4",
