@@ -67,6 +67,7 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                 return await cb({ status: SolutionResult.JudgementFailed, score: 0, details: { error: e.message } });
             }
             // Main
+            await cb({ status: SolutionResult.Judging, score: 0, details: {} });
             try {
                 const subtasks = new Map<string, Static<typeof Subtask>>();
                 const degree = new Map<string, number>();
@@ -113,7 +114,7 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                 }
                 const results = new Map<string, ISubtaskResult>();
                 const judgeResult: ISolution = {
-                    status: SolutionResult.WaitingJudge,
+                    status: SolutionResult.Judging,
                     score: 0,
                     details: {
                         subtasks: [],
@@ -133,7 +134,7 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                     }
                     const result: ISubtaskResult = {
                         name,
-                        status: SolutionResult.WaitingJudge,
+                        status: SolutionResult.Judging,
                         score: 100,
                         runcases: [],
                         time: 0,
@@ -149,7 +150,7 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                             const output = await resolveFile(runcase.output);
                             const userrun = runSolution(input.path, [], subtask.timeLimit, subtask.memoryLimit);
                             const caseResult = {
-                                status: SolutionResult.WaitingJudge,
+                                status: SolutionResult.Judging,
                                 score: 0,
                                 input: shortRead(input.path),
                                 output: "",
@@ -193,7 +194,7 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                                     closeSync(fd);
                                 }
                             }
-                            if (result.status === SolutionResult.WaitingJudge || result.status === SolutionResult.Accepted) {
+                            if (result.status === SolutionResult.Judging || result.status === SolutionResult.Accepted) {
                                 result.status = caseResult.status;
                             }
                             result.score = Math.min(result.score, caseResult.score);
@@ -202,7 +203,7 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                             result.memory = Math.max(result.memory, caseResult.memory);
                         }
                     }
-                    if (judgeResult.status === SolutionResult.WaitingJudge || judgeResult.status === SolutionResult.Accepted) {
+                    if (judgeResult.status === SolutionResult.Judging || judgeResult.status === SolutionResult.Accepted) {
                         judgeResult.status = result.status;
                     }
                     judgeResult.score += result.score / 100 * subtask.score;
