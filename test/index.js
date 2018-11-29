@@ -34,6 +34,10 @@ const commonTest = async () => {
 
     console.log("Start test Lua5.3 AC");
     await judge(problem, { file: 7, language: "lua5.3" }, getFile, (solution) => console.log(solution));
+
+    console.log("Start test Java AC");
+    await judge(problem, { file: 8, language: "java" }, getFile, (solution) => console.log(solution));
+
     process.exit(0);
 };
 
