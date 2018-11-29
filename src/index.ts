@@ -24,7 +24,7 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
     if (Problem.guard(problem)) {
         if (Solution.guard(solution)) {
             if (!sandbox) {
-                sandbox = new PerillaSandbox(config.isolateExecutable, config.boxID, 0, 1.1, 0, 1.1);
+                sandbox = new PerillaSandbox(config.isolateExecutable, config.boxID, 0, 1.1, 0, 1.1, process.env);
             }
             emptyDirSync(mainDir);
             let runSolution: IWrappedRun = null;

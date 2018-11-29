@@ -13,7 +13,7 @@ const python2: ILanguage = {
     run: {
         executable: "/usr/bin/python2",
         filename: "main.py",
-        arguments: [],
+        arguments: ["main.py"],
         processLimit: 5,
     },
 };

@@ -18,7 +18,7 @@ const main = async (problem, solution, resolveFile, cb) => {
     if (interface_2.Problem.guard(problem)) {
         if (interface_2.Solution.guard(solution)) {
             if (!sandbox) {
-                sandbox = new perilla_sandbox_1.PerillaSandbox(config.isolateExecutable, config.boxID, 0, 1.1, 0, 1.1);
+                sandbox = new perilla_sandbox_1.PerillaSandbox(config.isolateExecutable, config.boxID, 0, 1.1, 0, 1.1, process.env);
             }
             fs_extra_1.emptyDirSync(mainDir);
             let runSolution = null;

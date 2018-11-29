@@ -17,8 +17,8 @@
   },
   "dependencies": {
     "fs-extra": "^7.0.1",
-    "perilla-sandbox": "^1.0.7",
-    "runtypes": "^2.1.6",
+    "perilla-sandbox": "^2.0.0",
+    "runtypes": "^3.0.1",
     "tmp": "^0.0.33",
     "typescript": "^3.1.6"
   }

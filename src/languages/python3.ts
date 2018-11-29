@@ -13,7 +13,7 @@ const python3: ILanguage = {
     run: {
         executable: "/usr/bin/python3",
         filename: "main.py",
-        arguments: [],
+        arguments: ["main.py"],
         processLimit: 5,
     },
 };
