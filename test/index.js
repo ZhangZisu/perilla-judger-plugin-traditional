@@ -6,7 +6,7 @@ const commonTest = async () => {
         subtasks: [
             {
                 name: "default",
-                timeLimit: 1000,
+                timeLimit: 5,
                 memoryLimit: 512 * 1024,
                 score: 100,
                 runcases: [{ input: 1, output: 2 }],
@@ -31,6 +31,9 @@ const commonTest = async () => {
 
     console.log("Start test python3 RE");
     await judge(problem, { file: 6, language: "python3" }, getFile, (solution) => console.log(solution));
+
+    console.log("Start test Lua5.3 AC");
+    await judge(problem, { file: 7, language: "lua5.3" }, getFile, (solution) => console.log(solution));
     process.exit(0);
 };
 
