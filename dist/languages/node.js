@@ -2,18 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const node = {
     compile: {
-        executable: "/usr/bin/echo",
+        executable: "/usr/bin/env",
         memoryLimit: 512 * 1024,
         timeLimit: 3,
         processLimit: 1,
-        arguments: ["Node.js does not need to be compiled"],
+        arguments: ["echo", "Node.js does not need to be compiled"],
         sourceFileName: "main.js",
         distFileName: "main.js",
     },
     run: {
-        executable: "/usr/bin/node",
+        executable: "/usr/bin/env",
         filename: "main.js",
-        arguments: ["main.js"],
+        arguments: ["node", "main.js"],
         processLimit: 64,
     },
 };

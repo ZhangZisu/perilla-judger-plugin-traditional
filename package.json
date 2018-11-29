@@ -8,7 +8,8 @@
   "scripts": {
     "build": "tsc",
     "pretest": "tsc",
-    "test": "node test"
+    "test": "node test",
+    "postinstall": "tsc"
   },
   "devDependencies": {
     "@types/fs-extra": "^5.0.4",
@@ -21,5 +22,6 @@
     "runtypes": "^3.0.1",
     "tmp": "^0.0.33",
     "typescript": "^3.1.6"
-  }
+  },
+  "private": true
 }
