@@ -13,7 +13,7 @@ const lua: ILanguage = {
     run: {
         executable: "/usr/bin/env",
         filename: "main.lua",
-        arguments: ["lua5.3", "main.lua"],
+        arguments: ["lua", "main.lua"],
         processLimit: 5,
     },
 };

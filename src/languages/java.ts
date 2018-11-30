@@ -5,7 +5,7 @@ const java: ILanguage = {
         executable: "/usr/bin/env",
         memoryLimit: 1024 * 1024,
         timeLimit: 3,
-        processLimit: 16,
+        processLimit: 32,
         arguments: ["javac", "Main.java"],
         sourceFileName: "Main.java",
         distFileName: "Main.class",
@@ -14,7 +14,7 @@ const java: ILanguage = {
         executable: "/usr/bin/env",
         filename: "Main.class",
         arguments: ["java", "Main"],
-        processLimit: 16,
+        processLimit: 32,
     },
 };
 

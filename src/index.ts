@@ -194,7 +194,7 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                                     closeSync(fd);
                                 }
                             }
-                            if (result.status === SolutionResult.Judging || result.status === SolutionResult.Accepted) {
+                            if (result.status === SolutionResult.Judging && caseResult.status !== SolutionResult.Accepted) {
                                 result.status = caseResult.status;
                             }
                             result.score = Math.min(result.score, caseResult.score);
@@ -203,7 +203,10 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                             result.memory = Math.max(result.memory, caseResult.memory);
                         }
                     }
-                    if (judgeResult.status === SolutionResult.Judging || judgeResult.status === SolutionResult.Accepted) {
+                    if (result.status === SolutionResult.Judging) {
+                        result.status = SolutionResult.Accepted;
+                    }
+                    if (judgeResult.status === SolutionResult.Judging && result.status !== SolutionResult.Accepted) {
                         judgeResult.status = result.status;
                     }
                     judgeResult.score += result.score / 100 * subtask.score;
@@ -212,6 +215,9 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                     judgeResult.details.memory = Math.max(judgeResult.details.memory, result.memory);
                     results.set(result.name, result);
                     await cb(judgeResult);
+                }
+                if (judgeResult.status === SolutionResult.Judging) {
+                    judgeResult.status = SolutionResult.Accepted;
                 }
                 return await cb(judgeResult);
             } catch (e) {
