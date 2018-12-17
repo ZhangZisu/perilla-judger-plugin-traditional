@@ -66,6 +66,7 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                 // Judgement Failed
                 return await cb({ status: SolutionResult.JudgementFailed, score: 0, details: { error: e.message } });
             }
+
             // Main
             await cb({ status: SolutionResult.Judging, score: 0, details: {} });
             try {
@@ -112,6 +113,8 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                     // Topsort failed
                     return await cb({ status: SolutionResult.JudgementFailed, score: 0, details: { error: "Topological sorting failed" } });
                 }
+
+                // It's time to start judge
                 const results = new Map<string, ISubtaskResult>();
                 const judgeResult: ISolution = {
                     status: SolutionResult.Judging,
@@ -158,6 +161,7 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                                 time: userrun.result.time,
                                 memory: userrun.result.memory,
                                 log: "",
+                                desc: runcase.desc,
                             };
                             if (userrun.result.status !== RunStatus.Succeeded) {
                                 caseResult.status = convertStatus(userrun.result.status);

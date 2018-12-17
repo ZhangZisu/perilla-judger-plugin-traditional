@@ -45,7 +45,9 @@ export type JudgeFunction = (
 export const RunCase = Record({
     input: Number,
     output: Number,
-});
+}).And(Partial({
+    desc: String,
+}));
 
 export const Subtask = Record({
     name: String,
@@ -97,6 +99,7 @@ export interface IRunCaseResult {
     time: number;
     memory: number;
     log: string;
+    desc?: string;
 }
 
 export interface ISubtaskResult {

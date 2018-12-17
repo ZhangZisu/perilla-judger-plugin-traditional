@@ -1,4 +1,9 @@
 {
     "tslint.autoFixOnSave": true,
-    "typescript.tsdk": "node_modules/typescript/lib"
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#232E3E",
+        "titleBar.activeBackground": "#314156",
+        "titleBar.activeForeground": "#F9FAFC"
+    }
 }
