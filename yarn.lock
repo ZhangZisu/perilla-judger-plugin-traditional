@@ -245,10 +245,10 @@ path@^0.12.7:
     process "^0.11.1"
     util "^0.10.3"
 
-perilla-sandbox@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/perilla-sandbox/-/perilla-sandbox-2.0.0.tgz#65ad91f6393e8d3d66cbac2febb4a7188589ad9e"
-  integrity sha512-xfqE8+58n4Sfib9s/QZiGEpl0JzH4NsER1bHuPIZFClzyvn1XtuEXs3YiGcxCqpaVmWPG1B1dkPjt+NeIyVruA==
+perilla-sandbox@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/perilla-sandbox/-/perilla-sandbox-2.0.2.tgz#480a30ab865b0a38b620804a31e3b477c305c58e"
+  integrity sha512-nUpu7AzC9x6oUO40vMzfDXs9M0kgRviB82dyW8Y3oPklglsz1CW75wdlz0mZy8kaSf33vZjc/NOPWbv4Z7fuoA==
   dependencies:
     fs-extra "^7.0.1"
     path "^0.12.7"
