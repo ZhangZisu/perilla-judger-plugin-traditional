@@ -125,6 +125,7 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                         memory: 0,
                     },
                 };
+                let lazyStatus = SolutionResult.Judging;
                 for (const name of order) {
                     let skip = false;
                     const subtask = subtasks.get(name);
@@ -210,8 +211,8 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                     if (result.status === SolutionResult.Judging) {
                         result.status = SolutionResult.Accepted;
                     }
-                    if (judgeResult.status === SolutionResult.Judging && result.status !== SolutionResult.Accepted) {
-                        judgeResult.status = result.status;
+                    if (lazyStatus === SolutionResult.Judging && result.status !== SolutionResult.Accepted) {
+                        lazyStatus = result.status;
                     }
                     judgeResult.score += result.score / 100 * subtask.score;
                     judgeResult.details.subtasks.push(result);
@@ -220,8 +221,10 @@ const main: JudgeFunction = async (problem, solution, resolveFile, cb) => {
                     results.set(result.name, result);
                     await cb(judgeResult);
                 }
-                if (judgeResult.status === SolutionResult.Judging) {
+                if (lazyStatus === SolutionResult.Judging) {
                     judgeResult.status = SolutionResult.Accepted;
+                } else {
+                    judgeResult.status = lazyStatus;
                 }
                 return await cb(judgeResult);
             } catch (e) {
